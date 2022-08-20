@@ -38,7 +38,7 @@ class MainHandler(BaseHandler):
     def get(self):
         try:
             print("MainHandler GET")
-            self.load_page()
+            self.load_page(state="?"+self.request.query)
         except Exception as e:
             traceback.print_exc()
 
@@ -61,7 +61,7 @@ class CommandHandler(BaseHandler):
             if person["orgId"] != Settings.org_id: #and user == None:
                 result_object['reason'] = 'Not Authenticated.'
                 result_object['code'] = 403
-            elif command not in ['call_status', 'list_devices', 'list_cameras', 'move_camera', 'set_main_video_source', 'start_meeting', 'device_status']:
+            elif command not in ['call_status', 'device_status', 'list_devices', 'list_cameras', 'move_camera', 'set_main_video_source', 'set_mute', 'set_volume', 'start_meeting']:
                 result_object['reason'] = "{0} command not recognized.".format(command)
                 result_object['code'] = 400
             else:
@@ -81,15 +81,19 @@ class CommandHandler(BaseHandler):
                                 result = yield self.call_status(jbody)
                             elif command == 'device_status':
                                 result = yield self.list_cameras(jbody)
-                                mute = yield self.mute_status(jbody)
+                                microphones = yield self.mute_status(jbody)
                                 volume = yield self.volume_status(jbody)
-                                result.update({"mute":mute, "volume":volume})
+                                result.update({"microphones":microphones, "volume":volume})
                             elif command == 'list_cameras':
                                 result = yield self.list_cameras(jbody)
                             elif command == 'move_camera':
                                 result = yield self.move_camera(jbody)
                             elif command == 'set_main_video_source':
                                 result = yield self.set_main_video_source(jbody)
+                            elif command == 'set_mute':
+                                result = yield self.set_mute(jbody)
+                            elif command == 'set_volume':
+                                result = yield self.set_volume(jbody)
                         else:
                             result_object['reason'] = "Missing required json parameter, 'device_id'"
                             result_object['code'] = 400
@@ -151,10 +155,10 @@ class CommandHandler(BaseHandler):
     
     @tornado.gen.coroutine
     def mute_status(self, jbody):
-        url = "https://webexapis.com/v1/xapi/status?deviceId={0}&name=Audio.VolumeMute".format(jbody.get("device_id"))
+        url = "https://webexapis.com/v1/xapi/status?deviceId={0}&name=Audio.Input.Connectors.Microphone[0..10].Mute".format(jbody.get("device_id"))
         mute_resp = yield DeviceBot.spark.get_with_retries_v2(url)
         print("mute_status - mute_resp:{0}".format(mute_resp.body))
-        result = mute_resp.body.get("result",{}).get("Audio",{}).get("VolumeMute")
+        result = mute_resp.body.get("result",{}).get("Audio",{}).get("Input",{}).get("Connectors",{}).get("Microphone",[])
         raise tornado.gen.Return(result)
 
     @tornado.gen.coroutine
@@ -233,6 +237,32 @@ class CommandHandler(BaseHandler):
         camera_resp = yield DeviceBot.spark.post_with_retries(url, payload)
         print("move_camera - camera_resp:{0}".format(camera_resp.body))
         raise tornado.gen.Return(direction_dict)
+
+    @tornado.gen.coroutine
+    def set_mute(self, command_object):
+        url = 'https://webexapis.com/v1/xapi/command/Audio.Microphones.{0}'
+        payload = {
+            "deviceId":command_object["device_id"]
+        }
+        state = "Unmute"
+        if(command_object["mute"]):
+            state = "Mute"
+        mute_resp = yield DeviceBot.spark.post_with_retries(url.format(state), payload)
+        print("set_mute - mute_resp:{0}".format(mute_resp.body))
+        raise tornado.gen.Return(True)
+
+    @tornado.gen.coroutine
+    def set_volume(self, command_object):
+        url = 'https://webexapis.com/v1/xapi/command/Audio.Volume.Set'
+        payload = {
+            "deviceId":command_object["device_id"], 
+            "arguments":{
+                "Level": command_object["volume"]
+            }
+        }
+        vol_resp = yield DeviceBot.spark.post_with_retries(url, payload)
+        print("set_volume - vol_resp:{0}".format(vol_resp.body))
+        raise tornado.gen.Return(True)
 
 
 

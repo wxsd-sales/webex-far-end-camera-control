@@ -42,12 +42,13 @@ function setDeviceInMeeting(member){
   myDevices[DEVICE_ID]["meeting_member_id"] = member.id;
   $('.clear-device').prop('disabled', false);
   $("#dial-device").removeClass('is-loading');
-  listCameras(DEVICE_ID);
+  deviceStatus(DEVICE_ID);
 }
 
 function clearMeeting(){
   //$(`#leave_${MEETING_ID}`).css('visibility', 'hidden');
   $(`#reset-div`).hide();
+  $('#dial-devices-div').hide();
   updateSummary(`Cleared MeetingId - ${MEETING_ID}`);
   MEETING_ID = undefined;
   clearDevice();
@@ -70,6 +71,7 @@ function addMeeting(event){
     if(IC_CONVERSATION_ID){
       buttonControl = "disabled"; 
       MEETING_ID = event.meeting.id;
+      $('#dial-devices-div').show();
     }
 
     showControls();
@@ -78,7 +80,7 @@ function addMeeting(event){
       $(`<div id="mtg_${event.meeting.id}" class="columns is-centered"/>`).append(
         //$('<div class="column is-1 is-centered py-0">'),
         $('<div class="column is-centered"/>').append(
-          $(`<button id="${event.meeting.id}" class="button meeting-button is-primary mr-2" ${buttonControl}/>`).text(name).on('click', function(e){
+          $(`<button id="${event.meeting.id}" class="button meeting-button is-primary" ${buttonControl}/>`).text(name).on('click', function(e){
             $('.meeting-button').prop('disabled', true);
             if(MEETING_ID){
               clearMeeting();
@@ -87,6 +89,7 @@ function addMeeting(event){
             updateSummary(`Using MeetingId - ${MEETING_ID}`);
             //$(`#leave_${event.meeting.id}`).css('visibility', 'visible');
             $(`#reset-div`).show();
+            $('#dial-devices-div').show();
           })
         )
       )
@@ -105,7 +108,7 @@ function addMeeting(event){
                 updateSummary(`${myDevices[DEVICE_ID].name} joined meeting.`);
                 setDeviceInMeeting(updated);
               } else {
-                  console.log('listCameras skipping, device already in meeting.');
+                  console.log('Device already in meeting.');
               }
             } else if(updated.status == "NOT_IN_MEETING" && myDevices[DEVICE_ID]["meeting_member_id"] == updated.id) {
               updateSummary(`${myDevices[DEVICE_ID].name} left meeting.`);
@@ -164,8 +167,8 @@ function listDevices(){
 }
 
 
-function listCameras(deviceId){
-    updateSummary('listCameras - Loading...');
+function deviceStatus(deviceId){
+    updateSummary('deviceStatus - Loading...');
     $("#cameras").empty();
     let body = {
         command : "device_status",
@@ -186,7 +189,6 @@ function listCameras(deviceId){
         }
 
         $("#cameras").on('change', function (e) {
-          //var optionSelected = $("option:selected", this);
           let body = {
             command: "set_main_video_source",
             device_id: DEVICE_ID,
@@ -200,11 +202,20 @@ function listCameras(deviceId){
         if(jresp.data.source){
           $("#cameras").val(jresp.data.source);
         }
-        updateSummary(`listCameras - Success`);
+
+        if(typeof(jresp.data.microphones) == "object" && jresp.data.microphones.length > 0){
+          confirmMuteStyle(jresp.data.microphones[0]["Mute"]);
+        }
+
+        if(typeof(jresp.data.volume) == "number"){
+          $("#volume-text").text(jresp.data.volume);
+          $("#volume-slider").val(jresp.data.volume);
+        }
+
+        updateSummary(`deviceStatus - Success`);
         $("#cameras-div").show();
       } else {
-        updateSummary(`listCameras - HTTP ${jresp.code} Error: ${jresp.reason}`);
-        //clearDeviceId();
+        updateSummary(`deviceStatus - HTTP ${jresp.code} Error: ${jresp.reason}`);
         $("#cameras-div").hide();
       }
     }); 
@@ -237,7 +248,6 @@ function showControls(){
   $('#controls-loading').hide();
   $('#main-controls').show();
   $('#load-meeting').removeClass('is-loading');
-  //alert(1);
 }
 
 
@@ -245,7 +255,6 @@ function showInstantConnectMeeting(url){
   $("#hero-section").removeClass('has-background-grey-light');
   $("#hero-content").append(
     $(`<iframe src="${url}" allow="camera;microphone">`).on("load", function() {
-      //showControls();
       $('#loading-notification').text("Please join the consultation when it's available.")
     })
   )
@@ -319,9 +328,13 @@ function pollCallStatus(deviceId){
   }
 }
 
-function updateSummaryCallStatus(jresp){
+function updateSummaryCallStatus(jresp, unavailable){
+  let message = `Device's call status is`;
+  if(unavailable){
+    message = `Device is not available. It's call status is`;
+  }
   if(typeof(jresp.data) == "object" && jresp.data.length > 0){
-    updateSummary(`checkCallStatus - device is not available. It's call status is '${jresp.data[0]["Status"]}'.`);
+    updateSummary(`checkCallStatus - ${message} '${jresp.data[0]["Status"]}'.`);
   } else {
     updateSummary(`checkCallStatus - HTTP ${jresp.code} Error: ${jresp.reason}`);
   }
@@ -334,7 +347,70 @@ function checkCallStatus(deviceId){
   }
   return $.post('/command', JSON.stringify(body)).done(function (response) {
     let jresp = JSON.parse(response);
+    console.log('checkCallStatus:');
+    console.log(jresp);
   });
+}
+
+function setVolume(volume){
+  let body = {
+    command: "set_volume",
+    device_id: DEVICE_ID,
+    volume : parseInt(volume)
+  }
+  return $.post('/command', JSON.stringify(body)).done(function (response) {
+    let jresp = JSON.parse(response);
+    console.log('setVolume:');
+    console.log(jresp);
+  });
+}
+
+function setMute(button){
+  let mute = false;
+  if($(button).hasClass('is-primary')){
+    mute = true;
+  }
+  let body = {
+    command: "set_mute",
+    device_id: DEVICE_ID,
+    mute : mute
+  }
+  return $.post('/command', JSON.stringify(body)).done(function (response) {
+    let jresp = JSON.parse(response);
+    console.log('setMute:');
+    console.log(jresp);
+  });
+}
+
+
+function muteStyle(button){
+  $(button).removeClass('is-primary');
+  $(button).addClass('is-danger');
+  $("#mute-icon").removeClass('fa-microphone');
+  $("#mute-icon").addClass('fa-microphone-slash');
+}
+
+function unmuteStyle(button){
+  $(button).addClass('is-primary');
+  $(button).removeClass('is-danger');
+  $("#mute-icon").addClass('fa-microphone');
+  $("#mute-icon").removeClass('fa-microphone-slash');
+}
+
+function confirmMuteStyle(value){
+  if(value.toLowerCase() == "off"){
+    unmuteStyle($('#mute'));
+  } else {
+    muteStyle($('#mute'));
+  }
+}
+
+function forceSwapMuteStyle(button){
+  if($(button).hasClass('is-primary')){
+    muteStyle(button);
+  } else {
+    unmuteStyle(button);
+  }
 }
 
 
@@ -381,7 +457,7 @@ $('document').ready(function() {
               resetDialer();
             });
           } else {
-            updateSummaryCallStatus(jresp);
+            updateSummaryCallStatus(jresp, true);
             resetDialer();
           }
         });
@@ -389,14 +465,13 @@ $('document').ready(function() {
     } else {
       updateSummary(`Dial Error - You must select a meeting first.`);
     }
-    //listCameras(deviceId)
-  })
+  });
 
   $('.clear-device').on('click', function(e) {
     let meeting = webex.meetings.meetingCollection.meetings[MEETING_ID];
     meeting.remove(myDevices[DEVICE_ID]["meeting_member_id"]);
     $('.clear-device').addClass('is-loading');
-  })
+  });
 
   /* 
     set-device is not currently shown.
@@ -406,7 +481,7 @@ $('document').ready(function() {
   $("#set-device").on('click', function(e) {
     console.log(e);
     let deviceId = document.getElementById("set-devices").value;
-    listCameras(deviceId)
+    deviceStatus(deviceId)
   })*/
 
   $("#start-meeting").on('click', function(e) {
@@ -426,34 +501,18 @@ $('document').ready(function() {
 
   // Update the current slider value (each time you drag the slider handle)
   slider.onchange = function() {
-    console.log(this.value);//TODO: SEND THE VOLUME CHANGE COMMAND
+    console.log(this.value);
     $("#volume-text").text(this.value);
+    setVolume(this.value);
   } 
 
   slider.oninput = function() {
     $("#volume-text").text(this.value);
   }
 
-  function muteStyle(button){
-    $(button).removeClass('is-primary');
-    $(button).addClass('is-danger');
-    $("#mute-icon").removeClass('fa-microphone');
-    $("#mute-icon").addClass('fa-microphone-slash');
-  }
-
-  function unmuteStyle(button){
-    $(button).addClass('is-primary');
-    $(button).removeClass('is-danger');
-    $("#mute-icon").addClass('fa-microphone');
-    $("#mute-icon").removeClass('fa-microphone-slash');
-  }
-
   $('#mute').on('click', function(e){
-    if($(this).hasClass('is-primary')){
-      muteStyle(this);
-    } else {
-      unmuteStyle(this);
-    }
+    setMute(this);
+    forceSwapMuteStyle(this);
   })
 
 })

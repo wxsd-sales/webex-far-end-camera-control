@@ -1,5 +1,6 @@
 import json
 import tornado.web
+import urllib.parse
 from settings import Settings
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -7,13 +8,15 @@ class BaseHandler(tornado.web.RequestHandler):
         cookie = self.get_secure_cookie(Settings.cookie_user, max_age_days=1, min_version=2)
         return cookie
 
-    def load_page(self, page="index"):
-        redirect_to = ""
-        if page != "index":
-            redirect_to += "?state={0}".format(page)
+    def load_page(self, page="index", state=""):
         person = self.get_current_user()
         if not person:
-            self.redirect('/webex-oauth{0}'.format(redirect_to))
+            args = ""
+            if state != "":
+                state = urllib.parse.quote_plus(state)
+                print('url encoded state:{0}'.format(state))
+                args = '?state={0}'.format(state)
+            self.redirect('/webex-oauth{0}'.format(args))
         else:
             person = json.loads(person)
             print(person)

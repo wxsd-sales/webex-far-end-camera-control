@@ -36,7 +36,7 @@
   <body>
     <div class="columns is-centered is-primary has-background-primary mt-0 mb-0">
         <div class="column is-1 is-centered py-0"></div>
-        <div class="column is-centered">
+        <div class="column is-centered pb-0">
             <h1 class="title">Far End Camera Control</h1>
         </div>
         <div class="column is-1 is-centered">
@@ -49,23 +49,13 @@
         </div>
     </div>
     <div class="columns is-centered mb-0">
-        <div id="main-content" class="column is-three-quarters pb-0" style="display:none;">
-            <!--<div class="container is-max-width has-background-grey-light" style="height:100%">
-            </div>-->
+        <div id="main-content" class="column is-three-quarters pb-0 mx-2" style="display:none;">
             <section id="hero-section" class="hero my-hero-fullheight has-background-grey-light">
                 <div id="hero-content" class="hero-body py-0">
                 </div>
             </section>
-            <!--<div class="columns is-mobile is-centered">
-                <div class="column is-narrow">
-                    <section class="hero is-large has-background-grey-light">
-                        <div class="hero-body" style="height:100%">
-                        </div>
-                    </section>
-                </div>
-            </div>-->
         </div>
-        <div id="controls-div" class="column is-narrow">
+        <div id="controls-div" class="column mx-2">
             <div id="controls-loading" style="display:none;">
                 <section class="hero my-hero-fullheight">
                     <div class="hero-body">
@@ -85,7 +75,7 @@
             <div id="main-controls" style="display:none;">
                 <div class="columns is-mobile is-centered my-1">
                     <div class="column is-1 is-centered py-0"></div>
-                    <div id="my-meetings" class="column is-narrow">
+                    <div id="my-meetings" class="column">
                         <div id="no-meetings">
                             <div class="notification has-text-centered">
                                 <p>Active meetings you are in will be displayed here.</p>
@@ -104,12 +94,12 @@
                         </button>
                     </div>
                 </div>
-                <div class="columns is-centered">
+                <div class="columns is-centered mx-1">
                     <div class="column">
                         <textarea class="textarea" placeholder="Logs will be shown here." id="summary" disabled></textarea>
                     </div>
                 </div>
-                <div id="dial-devices-div" class="columns is-centered">
+                <div id="dial-devices-div" class="columns is-centered" style="display:none;">
                     <div class="column is-centered pb-0">
                         <div class="select mr-2">
                             <select id="dial-devices">
@@ -156,11 +146,8 @@
                             </nav>
                         </div>
                     </div>
-                    <div class="columns is-centered is-mobile mb-0">
-                        
-                    </div>
-                    <div class="columns is-centered is-mobile my-0">
-                        <div class="column is-centered is-narrow py-1">
+                    <div class="columns is-centered is-mobile">
+                        <div class="column is-centered is-narrow py-1 pr-2">
                             <button id="mute" class="button is-primary is-rounded is-inverted">
                                 <span class="icon">
                                     <i id="mute-icon" class="fas fa-microphone"></i>
@@ -169,20 +156,17 @@
                         </div>
                         <div class="column is-centered is-7 px-0">
                             <div class="slidecontainer">
-                                <input type="range" min="1" max="100" value="50" class="slider" id="volume-slider">
+                                <input type="range" min="0" max="100" value="50" class="slider" id="volume-slider">
                             </div>
                         </div>
-                        <div class="column is-centered is-narrow" style="padding-top: .6rem !important;">
-                            <div style="">
+                        <div class="column is-centered is-narrow pl-2" style="padding-top: .6rem !important;">
+                            <div>
                                 <span class="icon">
                                     <i class="fas fa-volume-high" style="margin-bottom: -2px;"></i>
                                 </span>
                                 <span id="volume-text">50</span>
                             </div>
                         </div>
-                    </div>
-                    <div class="columns is-centered is-mobile mb-0">
-                        
                     </div>
                 </div>
             </div>
@@ -209,6 +193,7 @@
             if(typeof(view) == "string" && view.indexOf("debug") >= 0){
                 //$("#set-devices-div").show();
                 $("#cameras-div").show();
+                $('#dial-devices-div').show();
             }
             if(typeof(view) == "string" && view.indexOf("ic") >= 0){
                 $("#main-content").show();

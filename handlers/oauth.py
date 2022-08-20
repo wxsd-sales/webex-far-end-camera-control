@@ -24,8 +24,7 @@ class WebexOAuthHandler(BaseHandler):
         return payload
 
     @tornado.gen.coroutine
-    def get_tokens(self, code, state=""):
-        print('generating token for state:{0}'.format(state))
+    def get_tokens(self, code):
         url = "https://webexapis.com/v1/access_token"
         api_url = 'https://webexapis.com/v1'
         payload = self.build_access_token_payload(code, Settings.webex_client_id, Settings.webex_client_secret, Settings.webex_redirect_uri)
@@ -57,14 +56,13 @@ class WebexOAuthHandler(BaseHandler):
             print('Webex OAuth: {0}'.format(self.request.full_url()))
             state = self.get_argument("state","")
             person = self.get_current_user()
+            print('Webex OAuth state:{0}'.format(state))
             if not person:
                 if self.get_argument("code", None):
                     code = self.get_argument("code")
-                    yield self.get_tokens(code, state)
-                    if state != "":
-                        self.redirect(state)
-                    else:
-                        self.redirect("/")
+                    yield self.get_tokens(code)
+                    #state = urllib.parse.unquote_plus(state)
+                    self.redirect("/"+state)
                     return
                 else:
                     authorize_url = '{0}?client_id={1}&response_type=code&redirect_uri={2}&scope={3}&state={4}'
@@ -75,10 +73,7 @@ class WebexOAuthHandler(BaseHandler):
                     return
             else:
                 print("Already authenticated.")
-                if state == "":
-                    self.redirect("/")
-                else:
-                    self.redirect("/{0}".format(state))
+                self.redirect(state)
                 return
         except Exception as e:
             response = "{0}".format(e)
