@@ -109,6 +109,8 @@ function addMeeting(event){
                 setDeviceInMeeting(updated);
               } else {
                   console.log('Device already in meeting.');
+                  let isUnmuted = !updated.isAudioMuted;
+                  confirmMuteStyle(isUnmuted);
               }
             } else if(updated.status == "NOT_IN_MEETING" && myDevices[DEVICE_ID]["meeting_member_id"] == updated.id) {
               updateSummary(`${myDevices[DEVICE_ID].name} left meeting.`);
@@ -204,7 +206,8 @@ function deviceStatus(deviceId){
         }
 
         if(typeof(jresp.data.microphones) == "object" && jresp.data.microphones.length > 0){
-          confirmMuteStyle(jresp.data.microphones[0]["Mute"]);
+          let isUnmuted = jresp.data.microphones[0]["Mute"].toLowerCase() == "off";
+          confirmMuteStyle(isUnmuted);
         }
 
         if(typeof(jresp.data.volume) == "number"){
@@ -397,8 +400,8 @@ function unmuteStyle(button){
   $("#mute-icon").removeClass('fa-microphone-slash');
 }
 
-function confirmMuteStyle(value){
-  if(value.toLowerCase() == "off"){
+function confirmMuteStyle(isUnmuted){
+  if(isUnmuted){
     unmuteStyle($('#mute'));
   } else {
     muteStyle($('#mute'));
