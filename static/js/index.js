@@ -94,7 +94,9 @@ function addMeeting(event){
         )
       )
     );
-
+    
+    console.log('listening to member changes for meeting:');
+    console.log(event.meeting);
     event.meeting.members.on('members:update', (payload) => {
       try{
         console.log("<members:update>", payload);
@@ -109,8 +111,10 @@ function addMeeting(event){
                 setDeviceInMeeting(updated);
               } else {
                   console.log('Device already in meeting.');
-                  let isUnmuted = !updated.isAudioMuted;
-                  confirmMuteStyle(isUnmuted);
+              }
+              if(updated.isAudioMuted !== undefined){
+                let isUnmuted = !updated.isAudioMuted;
+                confirmMuteStyle(isUnmuted);
               }
             } else if(updated.status == "NOT_IN_MEETING" && myDevices[DEVICE_ID]["meeting_member_id"] == updated.id) {
               updateSummary(`${myDevices[DEVICE_ID].name} left meeting.`);
@@ -516,6 +520,16 @@ $('document').ready(function() {
   $('#mute').on('click', function(e){
     setMute(this);
     forceSwapMuteStyle(this);
+  })
+
+  $('#zoom-in').on('click', function(e){
+    let element = {className : "in"};
+    moveCamera(element);
+  })
+
+  $('#zoom-out').on('click', function(e){
+    let element = {className : "out"};
+    moveCamera(element);
   })
 
 })

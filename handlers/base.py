@@ -22,3 +22,8 @@ class BaseHandler(tornado.web.RequestHandler):
             print(person)
             #tokens = {"token":self.application.settings['db'].is_user(person['id'])}
             self.render("{0}.html".format(page), person=person)
+    
+    def is_allowed(self, person):
+        is_org_user = person["orgId"] == Settings.org_id
+        is_allowed_user = person.get("emails", [None])[0] in Settings.users
+        return is_org_user or is_allowed_user

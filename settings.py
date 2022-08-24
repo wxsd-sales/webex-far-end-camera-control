@@ -9,6 +9,9 @@ class Settings(object):
 	bot_token = os.environ.get("MY_BOT_TOKEN")
 	aud = os.environ.get("MY_INSTANT_CONNECT_AUD")
 	org_id = os.environ.get("MY_ORG_ID")
+	users = os.environ.get("MY_USERS", [])
+	if users != []:
+		users = users.split(',')
 	
 	webex_client_id = os.environ.get("MY_WEBEX_CLIENT_ID")
 	webex_client_secret = os.environ.get("MY_WEBEX_SECRET")

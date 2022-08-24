@@ -136,14 +136,28 @@
                             </div>
                         </div>
                     </div>
-                    <div class="columns is-centered">
-                        <div class="column is-centered">
+                    <div class="columns is-centered is-vcentered is-mobile">
+                        <div class="column is-1 is-centered">
+                            <button id="zoom-in" class="button is-rounded is-light">
+                                <span class="icon">
+                                    <i class="fas fa-minus"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="column is-centered is-narrow">
                             <nav class="o-pad">
                                 <a class="up" onclick=moveCamera(this)></a>
                                 <a class="right" onclick=moveCamera(this)></a>
                                 <a class="down" onclick=moveCamera(this)></a>
                                 <a class="left" onclick=moveCamera(this)></a>
                             </nav>
+                        </div>
+                        <div class="column is-1 is-centered">
+                            <button id="zoom-out" class="button is-rounded is-light">
+                                <span class="icon">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                            </button>
                         </div>
                     </div>
                     <div class="columns is-centered is-mobile">

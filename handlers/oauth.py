@@ -41,7 +41,10 @@ class WebexOAuthHandler(BaseHandler):
             person = yield Spark(resp["access_token"]).get_with_retries_v2('{0}/people/me'.format(api_url))
             person.body.update({"token":resp["access_token"]})
             print("person.body:{0}".format(person.body))
-            self.set_secure_cookie(Settings.cookie_user, json.dumps(person.body), expires_days=1, version=2)
+            if not self.is_allowed(person.body):
+                self.redirect('/authentication-failed')
+            else:
+                self.set_secure_cookie(Settings.cookie_user, json.dumps(person.body), expires_days=1, version=2)
         except Exception as e:
             print("WebexOAuthHandler.get_tokens Exception:{0}".format(e))
             traceback.print_exc()

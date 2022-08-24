@@ -31,6 +31,15 @@ define("debug", default=False, help="run in debug mode")
 class DeviceBot(object):
     spark = Spark(Settings.bot_token)
 
+class AuthFailedHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        try:
+            print("AuthFailedHandler GET")
+            self.render("authentication-failed.html")
+        except Exception as e:
+            traceback.print_exc()
 
 class MainHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -58,7 +67,7 @@ class CommandHandler(BaseHandler):
         else:
             person = json.loads(person)
             #user = self.application.settings['db'].get_user(person['id'])
-            if person["orgId"] != Settings.org_id: #and user == None:
+            if not self.is_allowed(person): #and user == None:
                 result_object['reason'] = 'Not Authenticated.'
                 result_object['code'] = 403
             elif command not in ['call_status', 'device_status', 'list_devices', 'list_cameras', 'move_camera', 'set_main_video_source', 'set_mute', 'set_volume', 'start_meeting']:
@@ -233,6 +242,13 @@ class CommandHandler(BaseHandler):
             else:
                 adjustment = position.get("Tilt",0) - 1000
             direction_dict = {"Tilt": adjustment}
+        elif(command_object["direction"] in ["in", "out"]):
+            position = yield self.get_position(command_object["device_id"], command_object["camera_id"], "Zoom")
+            if(command_object["direction"] == "in"):
+                adjustment = position.get("Zoom",0) + 1000
+            else:
+                adjustment = position.get("Zoom",0) - 1000
+            direction_dict = {"Zoom": adjustment}
         payload["arguments"].update(direction_dict)
         camera_resp = yield DeviceBot.spark.post_with_retries(url, payload)
         print("move_camera - camera_resp:{0}".format(camera_resp.body))
@@ -274,6 +290,7 @@ def main():
                 (r"/", MainHandler),
                 (r"/command", CommandHandler),
                 (r"/webex-oauth", WebexOAuthHandler),
+                (r"/authentication-failed", AuthFailedHandler)
               ],
             template_path=os.path.join(os.path.dirname(__file__), "html_templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
