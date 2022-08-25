@@ -37,7 +37,7 @@
     <div class="columns is-centered is-primary has-background-primary mt-0 mb-0">
         <div class="column is-1 is-centered py-0"></div>
         <div class="column is-centered pb-0">
-            <h1 class="title">Far End Camera Control</h1>
+            <h1 id='main-title' class="title"></h1>
         </div>
         <div class="column is-1 is-centered">
             <figure class="image is-32x32">
@@ -201,6 +201,7 @@
         if(view == "instantconnect"){
             $("#controls-loading").show();
             $("#main-content").show();
+            $('#main-title').text('Instant Connect with Far End Camera Control');
         } else {
             isController = true;
             $("#main-controls").show();
@@ -211,10 +212,12 @@
             }
             if(typeof(view) == "string" && view.indexOf("ic") >= 0){
                 $("#main-content").show();
+                $('#main-title').text('Instant Connect with Far End Camera Control');
             } else {
                 $('#controls-div').removeClass('is-narrow');
                 $('#controls-div').addClass('is-half-desktop');
                 $('#controls-div').addClass('is-one-third-fullhd');
+                $('#main-title').text('Far End Camera Control');
             }
         }
     }
