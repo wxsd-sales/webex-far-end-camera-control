@@ -60,7 +60,7 @@ function addMeeting(event){
   console.log('meeting:added event');
   let conversationUrl = event.meeting.conversationUrl;
   console.log(conversationUrl);
-  if( isController || (typeof(conversationUrl) && conversationUrl.indexOf(IC_CONVERSATION_ID) >= 0) ){
+  if( isController || (typeof(conversationUrl) == "string" && conversationUrl.indexOf(IC_CONVERSATION_ID) >= 0) ){
     $("#no-meetings").hide();
     console.log(event);
     let name = event.meeting.meetingInfo.meetingName;
@@ -530,6 +530,17 @@ $('document').ready(function() {
   $('#zoom-out').on('click', function(e){
     let element = {className : "out"};
     moveCamera(element);
+  })
+
+  $('#logout').on('click', function(e){
+    let redirectTo = "/logout?";
+    let returnTo = PATHNAME;
+    returnTo = returnTo.replace("/", "");
+    if(returnTo != ""){
+      redirectTo += `returnTo=${returnTo}&`;
+    }
+    redirectTo += window.location.search.replace("?","");
+    window.location = redirectTo;
   })
 
 })

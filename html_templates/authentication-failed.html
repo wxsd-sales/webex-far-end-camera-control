@@ -36,4 +36,19 @@
   </body>
   {% block scripts %}{% end %}
   <script src="static/js/jquery-3.4.1.min.js"></script>
+  <script type="text/javascript">
+
+    const queryString = window.location.search;
+    const urlParams   = new URLSearchParams(queryString);
+    let returnTo    = urlParams.get('returnTo');
+    const view        = urlParams.get('view');
+    if(returnTo){
+        setTimeout(function(){
+            if(view){
+                returnTo += `?view=${view}`;
+            }
+            window.location = "/" + returnTo;
+        }, 10000);
+    }
+  </script>
 </html>

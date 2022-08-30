@@ -6,6 +6,7 @@ load_dotenv()
 class Settings(object):
 	port = int(os.environ.get("MY_APP_PORT"))
 	cookie_user = os.environ.get("MY_COOKIE_USER")
+	cookie_user_token = cookie_user + "-token"
 	bot_token = os.environ.get("MY_BOT_TOKEN")
 	aud = os.environ.get("MY_INSTANT_CONNECT_AUD")
 	org_id = os.environ.get("MY_ORG_ID")

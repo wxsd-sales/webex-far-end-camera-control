@@ -17,6 +17,7 @@ import tornado.web
 from settings import Settings
 from spark import Spark
 from handlers.base import BaseHandler
+from handlers.qr import QRHandler
 from handlers.oauth import WebexOAuthHandler
 
 #from datetime import datetime, timedelta
@@ -30,6 +31,24 @@ define("debug", default=False, help="run in debug mode")
 
 class DeviceBot(object):
     spark = Spark(Settings.bot_token)
+
+class LogoutHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        try:
+            print("LogoutHandler GET")
+            return_to = self.get_argument('returnTo', "")
+            view = self.get_argument('view', None)
+            person = self.get_current_user()
+            if person:
+                self.delete_current_user()
+            redirect_path = '/{0}?'.format(return_to)
+            if view:
+                redirect_path += 'view={0}'.format(view)
+            self.redirect(redirect_path)
+        except Exception as e:
+            traceback.print_exc()
 
 class AuthFailedHandler(BaseHandler):
     @tornado.web.asynchronous
@@ -47,7 +66,28 @@ class MainHandler(BaseHandler):
     def get(self):
         try:
             print("MainHandler GET")
-            self.load_page(state="?"+self.request.query)
+            token = self.get_argument('token', None)
+            return_to = self.get_argument('returnTo', "")
+            view = self.get_argument('view', None)
+            print('token:{0}'.format(token))
+            if token:
+                person = yield Spark(token).get_with_retries_v2('https://webexapis.com/v1/people/me')
+                print("person.body:{0}".format(person.body))
+                if not self.is_allowed(person.body):
+                    redirect_path = '/authentication-failed?'
+                    if return_to != "":
+                        redirect_path += 'returnTo={0}&'.format(return_to)
+                    if view:
+                        redirect_path += 'view={0}'.format(view)
+                    self.redirect(redirect_path)
+                else:
+                    self.save_current_user(person, token)
+                    redirect_path = "/{0}".format(return_to)
+                    if view:
+                        redirect_path += "?view={0}".format(view)
+                    self.redirect(redirect_path)
+            else:
+                self.load_page("?"+self.request.query)
         except Exception as e:
             traceback.print_exc()
 
@@ -65,7 +105,6 @@ class CommandHandler(BaseHandler):
             result_object['reason'] = 'Not Authenticated with Webex.'
             result_object['code'] = 401
         else:
-            person = json.loads(person)
             #user = self.application.settings['db'].get_user(person['id'])
             if not self.is_allowed(person): #and user == None:
                 result_object['reason'] = 'Not Authenticated.'
@@ -290,7 +329,9 @@ def main():
                 (r"/", MainHandler),
                 (r"/command", CommandHandler),
                 (r"/webex-oauth", WebexOAuthHandler),
-                (r"/authentication-failed", AuthFailedHandler)
+                (r"/authentication-failed", AuthFailedHandler),
+                (r"/qr", QRHandler),
+                (r"/logout", LogoutHandler)
               ],
             template_path=os.path.join(os.path.dirname(__file__), "html_templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),

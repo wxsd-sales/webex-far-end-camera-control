@@ -26,28 +26,29 @@ class WebexOAuthHandler(BaseHandler):
     @tornado.gen.coroutine
     def get_tokens(self, code):
         url = "https://webexapis.com/v1/access_token"
-        api_url = 'https://webexapis.com/v1'
         payload = self.build_access_token_payload(code, Settings.webex_client_id, Settings.webex_client_secret, Settings.webex_redirect_uri)
         headers = {
             'cache-control': "no-cache",
             'content-type': "application/x-www-form-urlencoded"
             }
+        success = False
         try:
             request = HTTPRequest(url, method="POST", headers=headers, body=payload)
             http_client = AsyncHTTPClient()
             response = yield http_client.fetch(request)
             resp = json.loads(response.body.decode("utf-8"))
             print("WebexOAuthHandler.get_tokens /access_token Response: {0}".format(resp))
-            person = yield Spark(resp["access_token"]).get_with_retries_v2('{0}/people/me'.format(api_url))
-            person.body.update({"token":resp["access_token"]})
+            person = yield Spark(resp['access_token']).get_with_retries_v2('https://webexapis.com/v1/people/me')
             print("person.body:{0}".format(person.body))
             if not self.is_allowed(person.body):
                 self.redirect('/authentication-failed')
             else:
-                self.set_secure_cookie(Settings.cookie_user, json.dumps(person.body), expires_days=1, version=2)
+                self.save_current_user(person, resp['access_token'])
+                success = True
         except Exception as e:
             print("WebexOAuthHandler.get_tokens Exception:{0}".format(e))
             traceback.print_exc()
+        raise tornado.gen.Return(success)
 
 
 
@@ -63,9 +64,10 @@ class WebexOAuthHandler(BaseHandler):
             if not person:
                 if self.get_argument("code", None):
                     code = self.get_argument("code")
-                    yield self.get_tokens(code)
-                    #state = urllib.parse.unquote_plus(state)
-                    self.redirect("/"+state)
+                    success = yield self.get_tokens(code)
+                    if success:
+                        #state = urllib.parse.unquote_plus(state)
+                        self.redirect("/"+state)
                     return
                 else:
                     authorize_url = '{0}?client_id={1}&response_type=code&redirect_uri={2}&scope={3}&state={4}'

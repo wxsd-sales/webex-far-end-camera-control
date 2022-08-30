@@ -35,17 +35,29 @@
   </head>
   <body>
     <div class="columns is-centered is-primary has-background-primary mt-0 mb-0">
-        <div class="column is-1 is-centered py-0"></div>
-        <div class="column is-centered pb-0">
+        <div class="column is-3 is-centered py-0"></div>
+        <div class="column is-centered py-1">
             <h1 id='main-title' class="title"></h1>
         </div>
-        <div class="column is-1 is-centered">
-            <figure class="image is-32x32">
-                <img id="webex-avatar" class="is-rounded"></img>
-            </figure>
-            <!--<figure class="image is-32x32">
-                <img class="is-rounded" src="static/img/webex-logo_128.png"></img>
-            </figure>-->
+        <div class="column is-3 is-centered py-0">
+            <div class="columns is-mobile is-centered my-1">
+                <div class="column is-narrow is-centered py-0">
+                    <button id="logout" class="button is-narrow is-rounded">
+                        <span class="pb-1">Logout</span>
+                        <span class="icon">
+                            <i class="fas fa-right-from-bracket"></i>
+                        </span>
+                    </button>
+                </div>
+                <div class="column py-1 pl-0">
+                    <figure class="image is-32x32">
+                        <img id="webex-avatar" class="is-rounded"></img>
+                    </figure>
+                    <!--<figure class="image is-32x32">
+                        <img class="is-rounded" src="static/img/webex-logo_128.png"></img>
+                    </figure>-->
+                </div>
+            </div>
         </div>
     </div>
     <div class="columns is-centered mb-0">
@@ -194,6 +206,7 @@
 
     const queryString = window.location.search;
     const urlParams   = new URLSearchParams(queryString);
+    const PATHNAME    = window.location.pathname
     const VIEW        = urlParams.get('view');
     var isController  = false;
 
