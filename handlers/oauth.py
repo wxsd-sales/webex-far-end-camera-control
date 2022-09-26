@@ -66,13 +66,13 @@ class WebexOAuthHandler(BaseHandler):
                     code = self.get_argument("code")
                     success = yield self.get_tokens(code)
                     if success:
-                        #state = urllib.parse.unquote_plus(state)
+                        state = urllib.parse.unquote_plus(state)
                         self.redirect("/"+state)
                     return
                 else:
                     authorize_url = '{0}?client_id={1}&response_type=code&redirect_uri={2}&scope={3}&state={4}'
                     use_url = 'https://webexapis.com/v1/authorize'
-                    authorize_url = authorize_url.format(use_url, Settings.webex_client_id, urllib.parse.quote_plus(Settings.webex_redirect_uri), Settings.webex_scopes, state)
+                    authorize_url = authorize_url.format(use_url, Settings.webex_client_id, urllib.parse.quote_plus(Settings.webex_redirect_uri), Settings.webex_scopes, urllib.parse.quote_plus(state))
                     print("WebexOAuthHandler.get authorize_url:{0}".format(authorize_url))
                     self.redirect(authorize_url)
                     return

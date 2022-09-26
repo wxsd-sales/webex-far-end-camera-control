@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="static/css/custom_camera.css">
       <link rel="stylesheet" href="static/css/custom_slider.css">
       <script src="https://kit.fontawesome.com/f4a0e6453b.js" crossorigin="anonymous"></script>
-      <title>{% block title %}Webex Far End Camera Control{% end %}</title>
+      <title>{% block title %}Virtual Rounding with FECC{% end %}</title>
       <style>
           .column.is-centered {
               display: flex;
@@ -17,6 +17,10 @@
 
           .my-hero-fullheight {
             height: calc(100vh - 72px)
+          }
+
+          .my-hero-fullheight-padded-top {
+            height: calc(100vh - 108px)
           }
 
           #hero-section {
@@ -34,7 +38,7 @@
       </style>
   </head>
   <body>
-    <div class="columns is-centered is-primary has-background-primary mt-0 mb-0">
+    <div id="header-box" class="columns is-centered is-primary has-background-primary mt-0 mb-0">
         <div class="column is-3 is-centered py-0"></div>
         <div class="column is-centered py-1">
             <h1 id='main-title' class="title"></h1>
@@ -130,15 +134,6 @@
                         </button>
                     </div>
                 </div>
-                <!--<div id="set-devices-div" class="columns is-centered" style="display: none;">
-                    <div class="column is-centered">
-                        <div class="select pr-2">
-                            <select id="set-devices">
-                            </select>
-                        </div>
-                        <button id="set-device" class="button is-primary">Set</button>
-                    </div>
-                </div>-->
                 <div id="cameras-div" style="display:none;">
                     <div class="columns is-centered">
                         <div class="column is-centered">
@@ -158,10 +153,10 @@
                         </div>
                         <div class="column is-centered is-narrow">
                             <nav class="o-pad">
-                                <a class="up" onclick=moveCamera(this)></a>
-                                <a class="right" onclick=moveCamera(this)></a>
-                                <a class="down" onclick=moveCamera(this)></a>
-                                <a class="left" onclick=moveCamera(this)></a>
+                                <a class="up"></a>
+                                <a class="right"></a>
+                                <a class="down"></a>
+                                <a class="left"></a>
                             </nav>
                         </div>
                         <div class="column is-1 is-centered">
@@ -202,13 +197,19 @@
   {% block scripts %}{% end %}
   <script src="static/js/jquery-3.4.1.min.js"></script>
   <script src="https://unpkg.com/webex/umd/webex.min.js"></script>
+  <script src="static/js/urlParams.js"></script>
   <script type="text/javascript">
 
-    const queryString = window.location.search;
-    const urlParams   = new URLSearchParams(queryString);
-    const PATHNAME    = window.location.pathname
-    const VIEW        = urlParams.get('view');
     var isController  = false;
+    console.log(VIEW);
+    if(MARGIN_TOP){
+        $('#header-box').removeClass('mt-0');
+        $('#header-box').addClass(`mt-${MARGIN_TOP}`);
+        $('.my-hero-fullheight').each(function(){
+            $(this).addClass('my-hero-fullheight-padded-top');
+            $(this).removeClass('my-hero-fullheight');
+        })
+    }
 
     function setView(view){
         if(view == "instantconnect"){
@@ -230,10 +231,11 @@
                 $('#controls-div').removeClass('is-narrow');
                 $('#controls-div').addClass('is-half-desktop');
                 $('#controls-div').addClass('is-one-third-fullhd');
-                $('#main-title').text('Far End Camera Control');
+                $('#main-title').text('Virtual Rounding with FECC');
             }
         }
     }
+    
     setView(VIEW);
 
     webexAvatar = "{{ person.get('avatar') }}";
@@ -257,5 +259,6 @@
         throw err;
       });
   </script>
+  <script src="static/js/deviceControls.js"></script>
   <script src="static/js/index.js"></script>
 </html>

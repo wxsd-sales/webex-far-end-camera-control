@@ -39,14 +39,11 @@ class LogoutHandler(BaseHandler):
         try:
             print("LogoutHandler GET")
             return_to = self.get_argument('returnTo', "")
-            view = self.get_argument('view', None)
             person = self.get_current_user()
             if person:
                 self.delete_current_user()
-            redirect_path = '/{0}?'.format(return_to)
-            if view:
-                redirect_path += 'view={0}'.format(view)
-            self.redirect(redirect_path)
+            self.redirect_page('/{0}?'.format(return_to))
+            
         except Exception as e:
             traceback.print_exc()
 
@@ -68,7 +65,8 @@ class MainHandler(BaseHandler):
             print("MainHandler GET")
             token = self.get_argument('token', None)
             return_to = self.get_argument('returnTo', "")
-            view = self.get_argument('view', None)
+
+            print(self.request.arguments)
             print('token:{0}'.format(token))
             if token:
                 person = yield Spark(token).get_with_retries_v2('https://webexapis.com/v1/people/me')
@@ -77,15 +75,10 @@ class MainHandler(BaseHandler):
                     redirect_path = '/authentication-failed?'
                     if return_to != "":
                         redirect_path += 'returnTo={0}&'.format(return_to)
-                    if view:
-                        redirect_path += 'view={0}'.format(view)
-                    self.redirect(redirect_path)
+                    self.redirect_page(redirect_path)
                 else:
                     self.save_current_user(person, token)
-                    redirect_path = "/{0}".format(return_to)
-                    if view:
-                        redirect_path += "?view={0}".format(view)
-                    self.redirect(redirect_path)
+                    self.redirect_page("/{0}?".format(return_to))
             else:
                 self.load_page("?"+self.request.query)
         except Exception as e:

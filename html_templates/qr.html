@@ -9,7 +9,7 @@
       <link rel="stylesheet" href="static/css/custom_camera.css">
       <link rel="stylesheet" href="static/css/custom_slider.css">
       <script src="https://kit.fontawesome.com/f4a0e6453b.js" crossorigin="anonymous"></script>
-      <title>{% block title %}Webex Far End Camera Control{% end %}</title>
+      <title>{% block title %}Virtual Rounding with FECC{% end %}</title>
       <style>
           .column.is-centered {
               display: flex;
@@ -18,10 +18,10 @@
       </style>
   </head>
   <body>
-    <div class="columns is-centered has-background-primary mt-0">
+    <div id="header-box" class="columns is-centered has-background-primary mt-0">
         <div class="column is-1 is-centered py-0"></div>
         <div class="column is-centered">
-            <h1 class="title">Far End Camera Control</h1>
+            <h1 id="main-title" class="title">Virtual Rounding with FECC</h1>
         </div>
         <div class="column is-1 is-centered"></div>
     </div>
@@ -69,12 +69,11 @@
   {% block scripts %}{% end %}
   <script src="static/js/jquery-3.4.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+  <script src="static/js/urlParams.js"></script>
   <script type="text/javascript">
 
-    const queryString = window.location.search;
-    const urlParams   = new URLSearchParams(queryString);
-    const view        = urlParams.get('view');
-      
+      universalHeader();
+
       function resetQRCode(){
         $('#qr-main-div').hide();
         $('#qr-expires-in').empty();
@@ -90,17 +89,9 @@
             let jresp = JSON.parse(response);
             if(jresp.success){
                 clearInterval(interval);
-                let redirectTo = `/?token=${jresp.data.access_token}&returnTo=qr`;
-                if(view){
-                    redirectTo += `&view=${view}`;
-                }
-                window.location = redirectTo;
+                redirectPage(`/?token=${jresp.data.access_token}&returnTo=qr`);
             } else if(jresp.reason.toLowerCase() != "precondition required") {
-                let redirectTo = '/authentication-failed?&returnTo=qr';
-                if(view){
-                    redirectTo += `&view=${view}`;
-                }
-                window.location = redirectTo;
+                redirectPage('/authentication-failed?&returnTo=qr');
             }
         });
       }

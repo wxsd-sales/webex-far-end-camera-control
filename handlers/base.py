@@ -10,6 +10,8 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         person = self.get_secure_cookie(Settings.cookie_user, max_age_days=1, min_version=2)
         token = self.get_secure_cookie(Settings.cookie_user_token, max_age_days=1, min_version=2)
+        if type(token) == bytes:
+            token = token.decode('utf-8')
         if person:
             person = json.loads(person)
             person.update({"token":token})
@@ -51,3 +53,11 @@ class BaseHandler(tornado.web.RequestHandler):
         is_org_user = person["orgId"] == Settings.org_id
         is_allowed_user = person.get("emails", [None])[0] in Settings.users
         return is_org_user or is_allowed_user
+
+    def redirect_page(self, redirect_path):
+        for arg in self.request.arguments:
+            if arg not in ["returnTo", "token"]:
+                arg_val = self.request.arguments[arg][0].decode('utf-8')
+                if arg_val != "":
+                    redirect_path += '{0}={1}&'.format(arg, arg_val)
+        self.redirect(redirect_path)

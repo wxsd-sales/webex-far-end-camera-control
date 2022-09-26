@@ -1,4 +1,3 @@
-
 var IC_CONVERSATION_ID;
 var MEETING_ID;
 var DEVICE_ID;
@@ -229,28 +228,6 @@ function deviceStatus(deviceId){
 }
 
 
-function moveCamera(element){
-  if(DEVICE_ID){
-    let body = {
-      command: "move_camera",
-      device_id: DEVICE_ID,
-      camera_id: parseInt(document.getElementById("cameras").value),
-      direction: element.className
-    }
-    console.log(body);
-    $.post('/command', JSON.stringify(body)).done(function (response) {
-      let jresp = JSON.parse(response);
-      if(jresp.data){
-        updateSummary(`moveCamera - ${JSON.stringify(jresp.data)}`);
-      } else {
-        updateSummary(`moveCamera - HTTP ${jresp.code} Error: ${jresp.reason}`);
-      }
-    });
-  } else {
-    updateSummary(`moveCamera - Error: Device ID is null`)
-  }
-}
-
 function showControls(){
   $('#controls-loading').hide();
   $('#main-controls').show();
@@ -261,7 +238,7 @@ function showControls(){
 function showInstantConnectMeeting(url){
   $("#hero-section").removeClass('has-background-grey-light');
   $("#hero-content").append(
-    $(`<iframe src="${url}" allow="camera;microphone">`).on("load", function() {
+    $(`<iframe src="${url}" allow="camera;microphone;">`).on("load", function() {
       $('#loading-notification').text("Please join the consultation when it's available.")
     })
   )
@@ -347,79 +324,6 @@ function updateSummaryCallStatus(jresp, unavailable){
   }
 }
 
-function checkCallStatus(deviceId){
-  let body = {
-    command: "call_status",
-    device_id: deviceId
-  }
-  return $.post('/command', JSON.stringify(body)).done(function (response) {
-    let jresp = JSON.parse(response);
-    console.log('checkCallStatus:');
-    console.log(jresp);
-  });
-}
-
-function setVolume(volume){
-  let body = {
-    command: "set_volume",
-    device_id: DEVICE_ID,
-    volume : parseInt(volume)
-  }
-  return $.post('/command', JSON.stringify(body)).done(function (response) {
-    let jresp = JSON.parse(response);
-    console.log('setVolume:');
-    console.log(jresp);
-  });
-}
-
-function setMute(button){
-  let mute = false;
-  if($(button).hasClass('is-primary')){
-    mute = true;
-  }
-  let body = {
-    command: "set_mute",
-    device_id: DEVICE_ID,
-    mute : mute
-  }
-  return $.post('/command', JSON.stringify(body)).done(function (response) {
-    let jresp = JSON.parse(response);
-    console.log('setMute:');
-    console.log(jresp);
-  });
-}
-
-
-function muteStyle(button){
-  $(button).removeClass('is-primary');
-  $(button).addClass('is-danger');
-  $("#mute-icon").removeClass('fa-microphone');
-  $("#mute-icon").addClass('fa-microphone-slash');
-}
-
-function unmuteStyle(button){
-  $(button).addClass('is-primary');
-  $(button).removeClass('is-danger');
-  $("#mute-icon").addClass('fa-microphone');
-  $("#mute-icon").removeClass('fa-microphone-slash');
-}
-
-function confirmMuteStyle(isUnmuted){
-  if(isUnmuted){
-    unmuteStyle($('#mute'));
-  } else {
-    muteStyle($('#mute'));
-  }
-}
-
-function forceSwapMuteStyle(button){
-  if($(button).hasClass('is-primary')){
-    muteStyle(button);
-  } else {
-    unmuteStyle(button);
-  }
-}
-
 
 $('document').ready(function() {
   
@@ -480,16 +384,6 @@ $('document').ready(function() {
     $('.clear-device').addClass('is-loading');
   });
 
-  /* 
-    set-device is not currently shown.
-    its intended use would be for controlling a camera outside of a meeting 
-  */
- /*
-  $("#set-device").on('click', function(e) {
-    console.log(e);
-    let deviceId = document.getElementById("set-devices").value;
-    deviceStatus(deviceId)
-  })*/
 
   $("#start-meeting").on('click', function(e) {
     $(e.target).addClass('is-loading');
@@ -510,7 +404,7 @@ $('document').ready(function() {
   slider.onchange = function() {
     console.log(this.value);
     $("#volume-text").text(this.value);
-    setVolume(this.value);
+    setVolume(this.value, DEVICE_ID);
   } 
 
   slider.oninput = function() {
@@ -518,18 +412,23 @@ $('document').ready(function() {
   }
 
   $('#mute').on('click', function(e){
-    setMute(this);
+    setMute(this, DEVICE_ID);
     forceSwapMuteStyle(this);
   })
 
   $('#zoom-in').on('click', function(e){
     let element = {className : "in"};
-    moveCamera(element);
+    moveCamera(element, DEVICE_ID);
   })
 
   $('#zoom-out').on('click', function(e){
     let element = {className : "out"};
-    moveCamera(element);
+    moveCamera(element, DEVICE_ID);
+  })
+
+  $('.up, .right, .down, .left').on('click', function(e){
+    console.log(this);
+    moveCamera(this, DEVICE_ID);
   })
 
   $('#logout').on('click', function(e){
