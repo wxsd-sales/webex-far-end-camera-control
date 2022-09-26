@@ -32,15 +32,17 @@ pip install requests-toolbelt
 
 ## Usage
 
-1. For the Instant Connect Demo, you can simply click start.
-2. Permissions are limited to CEC credentials in the live version.
-3. Once your meeting has been joined, you can dial a registered device.
-4. Once the device has answered the call, you can control its PTZ functions.
+### Instant Connect Demo
+1. For the Instant Connect Demo, you can simply click start.  
+2. Permissions are limited to CEC credentials in the live version.  
+3. Once your meeting has been joined, you can dial a registered device.  
+4. Once the device has answered the call, you can control its PTZ functions.  
 
-1. For the Controller Demo, you will need to be in an active meeting using your Webex client.
-2. You will be able to select a meeting you are currently a member of.
-3. You can dial a device (assuming you have permission).
-4. You can control the device once it has answered the invite call.
+### Controller Demo
+1. For the Controller Demo, you will need to be in an active meeting using your Webex client.  
+2. You will be able to select a meeting you are currently a member of.  
+3. You can dial a device (assuming you have permission).  
+4. You can control the device once it has answered the invite call.  
 
 
 ## Support
