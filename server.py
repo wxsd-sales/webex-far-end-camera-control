@@ -328,7 +328,7 @@ def main():
               ],
             template_path=os.path.join(os.path.dirname(__file__), "html_templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            cookie_secret="mcvmbnf4725mfbkjiashuduyebd",
+            cookie_secret=Settings.cookie_secret,
             xsrf_cookies=False,
             debug=options.debug,
             )
