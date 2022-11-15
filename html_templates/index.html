@@ -115,6 +115,16 @@
                         <textarea class="textarea" placeholder="Logs will be shown here." id="summary" disabled></textarea>
                     </div>
                 </div>
+                <div id="dial-telehealth-div" class="columns is-centered" style="display:none;">
+                    <div class="column is-centered pb-0">
+                        <button id="dial-telehealth" class="button is-primary mr-2 px-5">
+                            <span class="icon">
+                                <i class="fas fa-display mr-1"></i>
+                                <i class="fas fa-phone-flip"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
                 <div id="dial-devices-div" class="columns is-centered" style="display:none;">
                     <div class="column is-centered pb-0">
                         <div class="select mr-2">
@@ -212,10 +222,14 @@
     }
 
     function setView(view){
-        if(view == "instantconnect"){
+        if(view == "instantconnect" || view == "telehealth"){
             $("#controls-loading").show();
             $("#main-content").show();
-            $('#main-title').text('Instant Connect with Far End Camera Control');
+            if(view == "instantconnect"){
+                $('#main-title').text('Instant Connect with Far End Camera Control');
+            } else {
+                $('#main-title').text('Instant Connect with Telehealth Provider');
+            }
         } else {
             isController = true;
             $("#main-controls").show();
@@ -223,10 +237,11 @@
                 //$("#set-devices-div").show();
                 $("#cameras-div").show();
                 $('#dial-devices-div').show();
+                $('#dial-telehealth-div').show();
             }
             if(typeof(view) == "string" && view.indexOf("ic") >= 0){
                 $("#main-content").show();
-                $('#main-title').text('Instant Connect with Far End Camera Control');
+                $('#main-title').text('Instant Connect Debug');
             } else {
                 $('#controls-div').removeClass('is-narrow');
                 $('#controls-div').addClass('is-half-desktop');

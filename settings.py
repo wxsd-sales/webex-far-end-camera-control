@@ -20,5 +20,15 @@ class Settings(object):
 	webex_redirect_uri = os.environ.get("MY_WEBEX_REDIRECT_URI")
 	webex_scopes = os.environ.get("MY_WEBEX_SCOPES")
 
+	cyracom_account_id = os.environ.get("CYRACOM_ACCOUNT_ID")
+	cyracom_pin = os.environ.get("CYRACOM_PIN")
+	cyracom_lang_code = os.environ.get("CYRACOM_LANG_CODE")
+	cyracom_username = os.environ.get("CYRACOM_USERNAME")
+	cyracom_password = os.environ.get("CYRACOM_PASSWORD")
+	cyracom_client_id = os.environ.get("CYRACOM_CLIENT_ID")
+	cyracom_client_secret = os.environ.get("CYRACOM_CLIENT_SECRET")
+	cyracom_api_key = os.environ.get("CYRACOM_API_KEY")
+
+
 	#mongo_uri = os.environ.get("MY_MONGO_URI")
 	#mongo_db = os.environ.get("MY_MONGO_DB")

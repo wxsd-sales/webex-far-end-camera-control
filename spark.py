@@ -71,10 +71,11 @@ class Spark(object):
         print('Equal? {0}'.format(equal))
         return equal
 
-    def simple_request(self, url, data=None, method="GET", allow_nonstandard_methods=False):
+    def simple_request(self, url, data=None, method="GET", allow_nonstandard_methods=False, add_headers={}):
         headers={"Accept" : "application/json",
                 "Content-Type":"application/json",
                 "Authorization": "Bearer " + self.token}
+        headers.update(add_headers)
         if os.environ.get('MY_USER_AGENT'):
             headers.update({"User-Agent":os.environ.get('MY_USER_AGENT')})
         if data != None:
@@ -140,13 +141,13 @@ class Spark(object):
         return
 
     @tornado.gen.coroutine
-    def get_with_retries_v2(self, url, websocket=None, max_retry_times=3, as_file=False):
+    def get_with_retries_v2(self, url, websocket=None, max_retry_times=3, as_file=False, add_headers={}):
         """
         Use this function.
         """
         try:
             #print("started get_with_retries")
-            request = self.simple_request(url)
+            request = self.simple_request(url, add_headers=add_headers)
             http_client = AsyncHTTPClient()
             response = yield http_client.fetch(request)
             result = Result(response, as_file)
@@ -183,7 +184,7 @@ class Spark(object):
                     websocket.write_message(json.dumps(update_obj))
                 yield tornado.gen.sleep(int(retry_after))
                 max_retry_times-=1
-                result = yield self.get_with_retries(url, websocket, max_retry_times)
+                result = yield self.get_with_retries_v2(url, websocket, max_retry_times, as_file, add_headers)
             else:
                 raise HTTPError(e.code, response=e.response) from e
         raise tornado.gen.Return(result)
@@ -301,11 +302,11 @@ class Spark(object):
         raise tornado.gen.Return(results)
 
     @tornado.gen.coroutine
-    def post_with_retries(self, url, data=None, websocket=None, max_retry_times=3, allow_nonstandard_methods=False):
+    def post_with_retries(self, url, data=None, websocket=None, max_retry_times=3, allow_nonstandard_methods=False, add_headers={}):
         try:
             if data:
                 data = json.dumps(data)
-            request = self.simple_request(url, data, method="POST", allow_nonstandard_methods=allow_nonstandard_methods)
+            request = self.simple_request(url, data, method="POST", allow_nonstandard_methods=allow_nonstandard_methods, add_headers=add_headers)
             http_client = AsyncHTTPClient()
             response = yield http_client.fetch(request)
             raise tornado.gen.Return(Result(response))
@@ -342,7 +343,7 @@ class Spark(object):
                     websocket.write_message(json.dumps(update_obj))
                 yield tornado.gen.sleep(int(retry_after))
                 max_retry_times-=1
-                result = yield self.post_with_retries(url, data, websocket, max_retry_times, allow_nonstandard_methods)
+                result = yield self.post_with_retries(url, data, websocket, max_retry_times, allow_nonstandard_methods, add_headers)
             else:
                 raise HTTPError(e.code, response=e.response) from e
         raise tornado.gen.Return(result)

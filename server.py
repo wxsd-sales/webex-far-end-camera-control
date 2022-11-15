@@ -5,6 +5,7 @@ import base64
 import os
 import json
 #import pytz
+import pprint
 #import re
 import traceback
 
@@ -24,10 +25,12 @@ from handlers.oauth import WebexOAuthHandler
 #from dateutil import parser
 #from pymongo import ASCENDING, DESCENDING
 from tornado.options import define, options, parse_command_line
-from tornado.httpclient import HTTPError
+from tornado.httpclient import HTTPError, AsyncHTTPClient, HTTPRequest
+
 #from uuid import uuid4
 
 define("debug", default=False, help="run in debug mode")
+pp = pprint.PrettyPrinter(indent=4)
 
 class DeviceBot(object):
     spark = Spark(Settings.bot_token)
@@ -102,20 +105,29 @@ class CommandHandler(BaseHandler):
             if not self.is_allowed(person): #and user == None:
                 result_object['reason'] = 'Not Authenticated.'
                 result_object['code'] = 403
-            elif command not in ['call_status', 'device_status', 'list_devices', 'list_cameras', 'move_camera', 'set_main_video_source', 'set_mute', 'set_volume', 'start_meeting']:
+            elif command not in ['call_status', 'device_status', 'dial_telehealth', 'list_devices', 'list_cameras', 'move_camera', 'set_main_video_source', 'set_mute', 'set_volume', 'start_meeting']:
                 result_object['reason'] = "{0} command not recognized.".format(command)
                 result_object['code'] = 400
             else:
                 result = None
                 try:
                     if command == 'start_meeting':
-                        success, data = yield self.start_meeting(person)
+                        details = False
+                        if(jbody.get("details")):
+                            details = True
+                        success, data = yield self.start_meeting(person, details)
                         if not success:
                             result_object.update(data)
                         else:
                             result = data
                     elif command == 'list_devices':
                         result = yield self.list_devices()
+                    elif command == 'dial_telehealth':
+                        if(jbody.get("details")):
+                            result = yield self.dial_telehealth(jbody.get("details"))
+                        else:
+                            result_object['reason'] = "Missing required json parameter, 'details'"
+                            result_object['code'] = 400
                     else:
                         if(jbody.get("device_id")):
                             if command == 'call_status':
@@ -148,6 +160,62 @@ class CommandHandler(BaseHandler):
         print(res_val)
         self.write(res_val)
 
+    @tornado.gen.coroutine
+    def cyracom_token(self):
+        url = "https://id.cyracomstaging.com/oauth2/token"
+        payload = "client_id={0}&".format(Settings.cyracom_client_id,)
+        payload += "client_secret={0}&".format(Settings.cyracom_client_secret)
+        payload += "grant_type=password&"
+        payload += "username={0}&".format(Settings.cyracom_username)
+        payload += "password={0}&".format(Settings.cyracom_password)
+        payload += "scope=email roles profile openid"
+        headers = {
+            'cache-control': "no-cache",
+            'content-type': "application/x-www-form-urlencoded"
+            }
+        token = None
+        try:
+            request = HTTPRequest(url, method="POST", headers=headers, body=payload)
+            http_client = AsyncHTTPClient()
+            response = yield http_client.fetch(request)
+            resp = json.loads(response.body.decode("utf-8"))
+            print("cyracom /token Response: {0}".format(resp))
+            token = resp.get('access_token')
+        except Exception as e:
+            traceback.print_exc()
+        raise tornado.gen.Return(token)
+
+    @tornado.gen.coroutine
+    def dial_telehealth(self, details):
+        access_token = yield self.cyracom_token()
+        print('dial_telehealth details:{0}'.format(details))
+        ret_val = None
+        #resp = yield Spark(access_token).get_with_retries_v2("https://api.sandbox.cyracom.io/v1/accounts", add_headers={"api-key":Settings.cyracom_api_key})
+        #resp = yield Spark(access_token).get_with_retries_v2("https://api.sandbox.cyracom.io/v1/telehealth-providers", add_headers={"api-key":Settings.cyracom_api_key})
+        #resp = yield Spark(access_token).post_with_retries("https://api.sandbox.cyracom.io/v1/languages/search", payload, add_headers={"api-key":Settings.cyracom_api_key})
+        payload = {
+            "account-number": Settings.cyracom_account_id,
+            "pin": Settings.cyracom_pin,
+            "language-code": Settings.cyracom_lang_code,
+            "provider-id": 8,
+            "meeting-link": details["meetingLink"],
+            "meeting-id": details["meetingNumber"],
+            "meeting-password": "",
+            #"metadata": [{
+            #    "key": "OS",
+            #    "value": "MacOS"
+            #}]
+        }
+        #print('dial_telehealth payload: {0}').format(payload)
+        pp.pprint(payload)
+        try:
+            resp = yield Spark(access_token).post_with_retries("https://api.sandbox.cyracom.io/v1/calls/start/telehealth", payload, add_headers={"api-key":Settings.cyracom_api_key})
+            print("dial_telehealth - resp:{0}".format(resp.body))
+            ret_val = resp.body
+        except HTTPError as he:
+            traceback.print_exc()
+            print(he.response)
+        raise tornado.gen.Return(ret_val)
 
     @tornado.gen.coroutine
     def list_devices(self):
@@ -159,7 +227,7 @@ class CommandHandler(BaseHandler):
         raise tornado.gen.Return(devices)
 
     @tornado.gen.coroutine
-    def start_meeting(self, person):
+    def start_meeting(self, person, details=False):
         success = False
         result = {'reason':"Unable to Encrypt Data", 'code':400}
         userSpark = Spark(person["token"])
@@ -175,13 +243,19 @@ class CommandHandler(BaseHandler):
             mtg_resp = yield userSpark.post_with_retries(mtg_url, allow_nonstandard_methods=True)
             print("start_meeting - mtg_resp:{0}".format(mtg_resp.body))
             conversation_id = None
+            ret_mtg_details = {}
             try:
-                conversation_id = base64.b64decode(mtg_resp.body.get("spaceId")).decode('utf-8')
+                space_id = mtg_resp.body.get("spaceId")
+                if details:
+                    mtg_details = yield userSpark.get_with_retries_v2('https://webexapis.com/v1/rooms/{0}/meetingInfo'.format(space_id))
+                    print("start_meeting - mtg_details:{0}".format(mtg_details.body))
+                    ret_mtg_details = mtg_details.body
+                conversation_id = base64.b64decode(space_id).decode('utf-8')
                 conversation_id = conversation_id.split('/ROOM/')[1].strip()
             except Exception as e:
                 traceback.print_exc()
             talk_url = 'https://instant.webex.com/hc/v1/talk?int=jose&v=1&data='
-            result = {"url" :talk_url + host_data, "conversationId": conversation_id}
+            result = {"url" :talk_url + host_data, "conversationId": conversation_id, "details":ret_mtg_details}
             success = True
         raise tornado.gen.Return((success, result))
 

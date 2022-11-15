@@ -1,4 +1,5 @@
 var IC_CONVERSATION_ID;
+var IC_DETAILS;
 var MEETING_ID;
 var DEVICE_ID;
 var DECODED_DEVICE_ID;
@@ -70,7 +71,11 @@ function addMeeting(event){
     if(IC_CONVERSATION_ID){
       buttonControl = "disabled"; 
       MEETING_ID = event.meeting.id;
-      $('#dial-devices-div').show();
+      if(VIEW == "instantconnect"){
+        $('#dial-devices-div').show();
+      } else if(VIEW == "telehealth"){
+        $('#dial-telehealth-div').show();
+      }
     }
 
     showControls();
@@ -88,7 +93,11 @@ function addMeeting(event){
             updateSummary(`Using MeetingId - ${MEETING_ID}`);
             //$(`#leave_${event.meeting.id}`).css('visibility', 'visible');
             $(`#reset-div`).show();
-            $('#dial-devices-div').show();
+            if(VIEW == "instantconnect"){
+              $('#dial-devices-div').show();
+            } else if(VIEW == "telehealth"){
+              $('#dial-telehealth-div').show();
+            }
           })
         )
       )
@@ -244,12 +253,14 @@ function showInstantConnectMeeting(url){
   )
 }
 
-function startInstantConnectMeeting(){
-  $.post('/command', JSON.stringify({command: "start_meeting"})).done(function (response) {
+function startInstantConnectMeeting(details){
+  let body = {command: "start_meeting", details:details};
+  $.post('/command', JSON.stringify(body)).done(function (response) {
     console.log(response);
     let jresp = JSON.parse(response);
     if(jresp.data){
       IC_CONVERSATION_ID = jresp.data["conversationId"];
+      IC_DETAILS = jresp.data["details"];
       showInstantConnectMeeting(jresp.data["url"]);
     } else {
       console.log('startInstantConnectMeeting - failed');
@@ -327,7 +338,9 @@ function updateSummaryCallStatus(jresp, unavailable){
 
 $('document').ready(function() {
   
-  listDevices();
+  if(VIEW != "telehealth"){
+    listDevices();
+  }
 
   webex.meetings.on('meeting:added', (event) => {
     addMeeting(event);
@@ -341,6 +354,32 @@ $('document').ready(function() {
   console.log(myMeetings);
 
   $('#webex-avatar').attr('src', webexAvatar);
+
+  $("#dial-telehealth").on('click', function(e) {
+    console.log(e);
+    let meeting = webex.meetings.meetingCollection.meetings[MEETING_ID];
+    console.log('dial-telehealth - meeting:');
+    console.log(meeting);
+    if(meeting){
+      $("#dial-telehealth").addClass('is-loading');
+      $("#dial-telehealth").prop('disabled',true);
+      let body = {
+        command: "dial_telehealth",
+        details: IC_DETAILS
+      }
+      setTimeout(function(){
+        $("#dial-telehealth").removeClass('is-loading');
+        $("#dial-telehealth").prop('disabled',false);
+      }, 1000 * 20);
+      $.post('/command', JSON.stringify(body)).done(function (response) {
+        let jresp = JSON.parse(response);
+        console.log('dial_telehealth done response:');
+        console.log(jresp);
+      });
+    } else {
+      updateSummary(`Dial Error - You must select a meeting first.`);
+    }
+  });
 
   $("#dial-device").on('click', function(e) {
     console.log(e);
@@ -388,7 +427,11 @@ $('document').ready(function() {
   $("#start-meeting").on('click', function(e) {
     $(e.target).addClass('is-loading');
     $('#loading-notification').css('visibility', 'visible');
-    startInstantConnectMeeting();
+    let details = false;
+    if(VIEW == "telehealth"){
+      details = true;
+    }
+    startInstantConnectMeeting(details);
   });
 
   $("#reset-meeting").on('click', function(e) {
