@@ -10,7 +10,7 @@
 This is a Web App which can control Pan/Tilt/Zoom (PTZ) functions of applicable Webex Devices. It works purely through the Cloud xAPI, using the token of a bot that has been added to the shared device's Workspace in Control Hub.
 
 ## Overview
-[![PTZ/FECC Video](https://user-images.githubusercontent.com/19175490/192361294-15d31319-d14d-4412-a4a7-9106473dc681.png)](https://app.vidcast.io/video/49e293fb-85e8-4eb5-baaa-672d48a7ea83)
+[![PTZ/FECC Video](https://user-images.githubusercontent.com/19175490/192361294-15d31319-d14d-4412-a4a7-9106473dc681.png)](https://app.vidcast.io/share/c4e04b00-22e7-4f4e-b34a-94ac46437c53)
 
 Server Requirements:
 1. python version >= 3.8
