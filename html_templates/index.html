@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="icon" type="image/png" href="static/img/favicon.ico" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+      <link rel="stylesheet" href="static/css/custom_camera.css">
+      <link rel="stylesheet" href="static/css/custom_slider.css">
+      <script src="https://kit.fontawesome.com/f4a0e6453b.js" crossorigin="anonymous"></script>
+      <title>{% block title %}Virtual Rounding with FECC{% end %}</title>
+      <style>
+          .column.is-centered {
+              display: flex;
+              justify-content: center;
+          }
+
+          .my-hero-fullheight {
+            height: calc(100vh - 72px)
+          }
+
+          .my-hero-fullheight-padded-top {
+            height: calc(100vh - 108px)
+          }
+
+          #hero-section {
+              border-radius: 6px;
+          }
+
+          #summary {
+              /*min-width: 375px;*/
+          }
+
+          iframe {
+              width: 100%;
+              height: 100%;
+          }
+      </style>
+  </head>
+  <body>
+    <div id="header-box" class="columns is-centered is-primary has-background-primary mt-0 mb-0">
+        <div class="column is-3 is-centered py-0"></div>
+        <div class="column is-centered py-1">
+            <h1 id='main-title' class="title"></h1>
+        </div>
+        <div class="column is-3 is-centered py-0">
+            <div class="columns is-mobile is-centered my-1">
+                <div class="column is-narrow is-centered py-0">
+                    <button id="logout" class="button is-narrow is-rounded">
+                        <span class="pb-1">Logout</span>
+                        <span class="icon">
+                            <i class="fas fa-right-from-bracket"></i>
+                        </span>
+                    </button>
+                </div>
+                <div class="column py-1 pl-0">
+                    <figure class="image is-32x32">
+                        <img id="webex-avatar" class="is-rounded"></img>
+                    </figure>
+                    <!--<figure class="image is-32x32">
+                        <img class="is-rounded" src="static/img/webex-logo_128.png"></img>
+                    </figure>-->
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="columns is-centered mb-0">
+        <div id="main-content" class="column is-three-quarters pb-0 mx-2" style="display:none;">
+            <section id="hero-section" class="hero my-hero-fullheight has-background-grey-light">
+                <div id="hero-content" class="hero-body py-0">
+                </div>
+            </section>
+        </div>
+        <div id="controls-div" class="column mx-2">
+            <div id="controls-loading" style="display:none;">
+                <section class="hero my-hero-fullheight">
+                    <div class="hero-body">
+                        <div class="columns">
+                            <div class="column is-centered">
+                                <div id="loading-notification" class="notification has-text-centered" style="visibility: hidden;">Preparing your meeting. This may take a minute...</div>
+                            </div>
+                        </div>
+                        <div class="columns">
+                            <div class="column is-centered">
+                                <button id="start-meeting" class="button is-primary is-narrow">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div id="main-controls" style="display:none;">
+                <div class="columns is-mobile is-centered my-1">
+                    <div class="column is-1 is-centered py-0"></div>
+                    <div id="my-meetings" class="column">
+                        <div id="no-meetings">
+                            <div class="notification has-text-centered">
+                                <p>Active meetings you are in will be displayed here.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column is-1 is-centered py-0"></div>
+                </div>
+                <div id="reset-div" class="columns is-centered" style="display:none;">
+                    <div class="column is-narrow is-centered">
+                        <button id="reset-meeting" class="button is-danger">
+                            <span>Clear</span>
+                            <span class="icon">
+                                <i class="fas fa-broom"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div class="columns is-centered mx-1">
+                    <div class="column">
+                        <textarea class="textarea" placeholder="Logs will be shown here." id="summary" disabled></textarea>
+                    </div>
+                </div>
+                <div id="dial-telehealth-div" class="columns is-centered" style="display:none;">
+                    <div class="column is-centered pb-0">
+                        <button id="dial-telehealth" class="button is-primary mr-2 px-5">
+                            <span class="icon">
+                                <i class="fas fa-display mr-1"></i>
+                                <i class="fas fa-phone-flip"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div id="dial-devices-div" class="columns is-centered" style="display:none;">
+                    <div class="column is-centered pb-0">
+                        <div class="select mr-2">
+                            <select id="dial-devices">
+                            </select>
+                        </div>
+                        <button id="dial-device" class="button is-primary mr-2 px-5">
+                            <span class="icon">
+                                <i class="fas fa-display mr-1"></i>
+                                <i class="fas fa-phone-flip"></i>
+                            </span>
+                        </button>
+                        <button class="clear-device button is-danger" disabled>
+                            <span class="icon">
+                                <i class="fas fa-phone-slash"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div id="cameras-div" style="display:none;">
+                    <div class="columns is-centered">
+                        <div class="column is-centered">
+                            <div class="select">
+                                <select id="cameras">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns is-centered is-vcentered is-mobile">
+                        <div class="column is-1 is-centered">
+                            <button id="zoom-in" class="button is-rounded is-light">
+                                <span class="icon">
+                                    <i class="fas fa-minus"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="column is-centered is-narrow">
+                            <nav class="o-pad">
+                                <a class="up"></a>
+                                <a class="right"></a>
+                                <a class="down"></a>
+                                <a class="left"></a>
+                            </nav>
+                        </div>
+                        <div class="column is-1 is-centered">
+                            <button id="zoom-out" class="button is-rounded is-light">
+                                <span class="icon">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="columns is-centered is-mobile">
+                        <div class="column is-centered is-narrow py-1 pr-2">
+                            <button id="mute" class="button is-primary is-rounded is-inverted">
+                                <span class="icon">
+                                    <i id="mute-icon" class="fas fa-microphone"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="column is-centered is-7 px-0">
+                            <div class="slidecontainer">
+                                <input type="range" min="0" max="100" value="50" class="slider" id="volume-slider">
+                            </div>
+                        </div>
+                        <div class="column is-centered is-narrow pl-2" style="padding-top: .6rem !important;">
+                            <div>
+                                <span class="icon">
+                                    <i class="fas fa-volume-high" style="margin-bottom: -2px;"></i>
+                                </span>
+                                <span id="volume-text">50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </body>
+  {% block scripts %}{% end %}
+  <script src="static/js/jquery-3.4.1.min.js"></script>
+  <script src="https://unpkg.com/webex/umd/webex.min.js"></script>
+  <script src="static/js/urlParams.js"></script>
+  <script type="text/javascript">
+
+    var isController  = false;
+    console.log(VIEW);
+    if(MARGIN_TOP){
+        $('#header-box').removeClass('mt-0');
+        $('#header-box').addClass(`mt-${MARGIN_TOP}`);
+        $('.my-hero-fullheight').each(function(){
+            $(this).addClass('my-hero-fullheight-padded-top');
+            $(this).removeClass('my-hero-fullheight');
+        })
+    }
+
+    function setView(view){
+        if(view == "instantconnect" || view == "telehealth"){
+            $("#controls-loading").show();
+            $("#main-content").show();
+            if(view == "instantconnect"){
+                $('#main-title').text('Instant Connect with Far End Camera Control');
+            } else {
+                $('#main-title').text('Instant Connect with Telehealth Provider');
+            }
+        } else {
+            isController = true;
+            $("#main-controls").show();
+            if(typeof(view) == "string" && view.indexOf("debug") >= 0){
+                //$("#set-devices-div").show();
+                $("#cameras-div").show();
+                $('#dial-devices-div').show();
+                $('#dial-telehealth-div').show();
+            }
+            if(typeof(view) == "string" && view.indexOf("ic") >= 0){
+                $("#main-content").show();
+                $('#main-title').text('Instant Connect Debug');
+            } else {
+                $('#controls-div').removeClass('is-narrow');
+                $('#controls-div').addClass('is-half-desktop');
+                $('#controls-div').addClass('is-one-third-fullhd');
+                $('#main-title').text('Virtual Rounding with FECC');
+            }
+        }
+    }
+    
+    setView(VIEW);
+
+    webexAvatar = "{{ person.get('avatar') }}";
+    if(webexAvatar == "None"){
+        webexAvatar = "static/img/user.png";
+    }
+
+    const webex = (window.webex = Webex.init({
+        credentials: {
+        access_token: "{{ person.get('token') }}"
+        }
+    }));
+
+    webex.meetings.register()
+      .then((data) => {
+        console.log(data);
+      })
+      .catch(err => {
+        console.error(err);
+        alert(err);
+        throw err;
+      });
+  </script>
+  <script src="static/js/deviceControls.js"></script>
+  <script src="static/js/index.js"></script>
+</html>

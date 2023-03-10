@@ -1,0 +1,148 @@
+{% import json %}
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="icon" type="image/png" href="static/img/favicon.ico" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+      <link rel="stylesheet" href="static/css/custom_camera.css">
+      <link rel="stylesheet" href="static/css/custom_slider.css">
+      <script src="https://kit.fontawesome.com/f4a0e6453b.js" crossorigin="anonymous"></script>
+      <title>{% block title %}Virtual Rounding with FECC{% end %}</title>
+      <style>
+          .column.is-centered {
+              display: flex;
+              justify-content: center;
+          }
+      </style>
+  </head>
+  <body>
+    <div id="header-box" class="columns is-centered has-background-primary mt-0">
+        <div class="column is-1 is-centered py-0"></div>
+        <div class="column is-centered">
+            <h1 id="main-title" class="title">Virtual Rounding with FECC</h1>
+        </div>
+        <div class="column is-1 is-centered"></div>
+    </div>
+    <section class="hero is-halfheight">
+        <div class="hero-body has-text-centered">
+            <div id="qr-main-div" class="container" style="display: none;">
+                <div id="sign-in" class="columns is-centered mb-0 mt-4">
+                    <div class="column has-text-centered is-align-items-center">
+                        <div>
+                            <p class="is-size-4">Scan the code to sign in:</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="columns is-centered">
+                    <div class="column is-narrow">
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+                <div id="qr-details">
+                    <div class="columns is-centered mb-0">
+                        <div class="column has-text-centered is-align-items-center">
+                            <div>
+                                <p class="is-size-4">Can't scan the QR code?</p>
+                                <p class="mb-3">Visit <span id="verification-uri" class="has-text-weight-bold is-family-monospace"></span> and enter code:</p>
+                                <code id="user-code" class="subtitle has-text-weight-semibold has-text-danger"></code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns is-centered mb-0">
+                        <div id="qr-expires-in" class="column is-narrow has-text-centered"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="qr-refresh" class="container" style="display:none;">
+                <button id="refresh-button" class="button is-primary is-rounded">
+                    <p class="is-size-4">Get New <i class="fa-solid fa-qrcode"></i> Code</p>
+                    <!--<span class="icon">
+                        <i class="fas fa-arrow-rotate-right"></i>
+                    </span>-->
+                </button>
+            </div>
+        </div>
+    </section>
+  </body>
+  {% block scripts %}{% end %}
+  <script src="static/js/jquery-3.4.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+  <script src="static/js/urlParams.js"></script>
+  <script type="text/javascript">
+
+      universalHeader();
+
+      function resetQRCode(){
+        $('#qr-main-div').hide();
+        $('#qr-expires-in').empty();
+        $('#user-code').empty();
+        $('#verification-uri').empty();
+        $('#qrcode').empty();
+      }
+
+      function pollToken(deviceCode, interval){
+        $.post('/qr', JSON.stringify({command : "poll", device_code : deviceCode})).done(function (response) {
+            console.log('poll response:');
+            console.log(response);
+            let jresp = JSON.parse(response);
+            if(jresp.success){
+                clearInterval(interval);
+                redirectPage(`/?token=${jresp.data.access_token}&returnTo=qr`);
+            } else if(jresp.reason.toLowerCase() != "precondition required") {
+                redirectPage('/authentication-failed?&returnTo=qr');
+            }
+        });
+      }
+
+      function getQRCode(){
+        $.post('/qr', JSON.stringify({command : "authorize"})).done(function (response) {
+            console.log(response);
+            let jresp = JSON.parse(response);
+            if(jresp.data){
+                console.log('/qr - success');
+                const qrcode = new QRCode(document.getElementById('qrcode'), {
+                    text: jresp.data.verification_uri_complete,
+                    colorDark : '#000',
+                    colorLight : '#fff',
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                $('#verification-uri').text(jresp.data.verification_uri);
+                $("#user-code").text(jresp.data.user_code);
+                $('#qr-main-div').show();
+
+                let counter = 180;
+                if(jresp.data.expires_in < counter){
+                    counter = jresp.data.expires_in;
+                }
+                let countdownInterval;
+                function countdown(first_run){
+                    if(first_run !== true && counter % 10 == 0){
+                        pollToken(jresp.data.device_code, countdownInterval);
+                    }
+                    if(counter > 0){
+                        $('#qr-expires-in').text(`Expires in ${counter} seconds`);
+                        counter -= 1;
+                    } else {
+                        clearInterval(countdownInterval);
+                        resetQRCode();
+                        $('#qr-refresh').show();
+                    }
+                }
+                countdown(true);
+                countdownInterval = setInterval(countdown, 1000);
+            } else {
+                console.log(`/qr - returned no data.`);
+            }
+        });
+      }
+
+      $('#refresh-button').on('click', function(e){
+          $('#qr-refresh').hide();
+          getQRCode();
+      })
+
+      getQRCode();
+  </script>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="icon" type="image/png" href="static/img/favicon.ico" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+      <link rel="stylesheet" href="static/css/custom_camera.css">
+      <link rel="stylesheet" href="static/css/custom_slider.css">
+      <script src="https://kit.fontawesome.com/f4a0e6453b.js" crossorigin="anonymous"></script>
+      <title>{% block title %}Virtual Rounding with FECC{% end %}</title>
+      <style>
+          .column.is-centered {
+              display: flex;
+              justify-content: center;
+          }
+      </style>
+  </head>
+  <body>
+    <div id="header-box" class="columns is-centered has-background-primary mt-0">
+        <div class="column is-1 is-centered py-0"></div>
+        <div class="column is-centered">
+            <h1 id="main-title" class="title">Virtual Rounding with FECC</h1>
+        </div>
+        <div class="column is-1 is-centered"></div>
+    </div>
+    <div class="columns is-centered mb-0">
+        <div class="column is-narrow">
+            <div>
+                <div class="notification is-danger has-text-centered">
+                    <p>You do not have permission to use this app.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+  </body>
+  {% block scripts %}{% end %}
+  <script src="static/js/jquery-3.4.1.min.js"></script>
+  <script src="static/js/urlParams.js"></script>
+  <script type="text/javascript">
+
+    universalHeader();
+
+    let returnTo  = urlParams.get('returnTo');
+    if(!returnTo){
+        returnTo = "";
+    }
+
+    if(returnTo){
+        setTimeout(function(){
+            redirectPage(`/${returnTo}?`);
+        }, 10000);
+    }
+  </script>
+</html>
