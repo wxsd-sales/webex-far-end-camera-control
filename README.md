@@ -7,8 +7,13 @@
 ·
 <a href="https://github.com/WXSD-Sales/webex-far-end-camera-control/issues"><strong>Request Feature</strong></a>
 
+Welcome to our WXSD DEMO Repo! <!-- Keep this here --> 
+
 This is a Web App which can control Pan/Tilt/Zoom (PTZ) functions of applicable Webex Devices. It works purely through the Cloud xAPI, using the token of a bot that has been added to the shared device's Workspace in Control Hub.
 
+
+<!-- Keep the following here -->  
+ *_Everything included is for demo and Proof of Concept purposes only. Your use of the site is solely at your own risk. This site may contain links to third party content, which we do not warrant, endorse, or assume liability for. These demos are for Cisco Webex usecases, but are not Official Cisco Webex Branded demos._
 ## Overview
 [![PTZ/FECC Video](https://user-images.githubusercontent.com/19175490/192361294-15d31319-d14d-4412-a4a7-9106473dc681.png)](https://app.vidcast.io/share/c4e04b00-22e7-4f4e-b34a-94ac46437c53)
 
