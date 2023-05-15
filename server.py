@@ -223,7 +223,8 @@ class CommandHandler(BaseHandler):
         print("list_devices - devices_resp:{0}".format(devices_resp.body))
         devices = {}
         for item in devices_resp.body.get('items',[]):
-            devices.update({ item['id'] : { "sip":item.get('primarySipUrl', item.get('sipUrls',[None])[0]), "name":item.get('displayName') }})
+            if item.get('type') != "accessory":
+                devices.update({ item['id'] : { "sip":item.get('primarySipUrl', item.get('sipUrls',[None])[0]), "name":item.get('displayName') }})
         raise tornado.gen.Return(devices)
 
     @tornado.gen.coroutine
