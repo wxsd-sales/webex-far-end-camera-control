@@ -71,10 +71,10 @@ function addMeeting(event){
     if(IC_CONVERSATION_ID){
       buttonControl = "disabled"; 
       MEETING_ID = event.meeting.id;
-      if(VIEW == "instantconnect"){
-        $('#dial-devices-div').show();
-      } else if(VIEW == "telehealth"){
+      if(VIEW == "telehealth"){
         $('#dial-telehealth-div').show();
+      } else {
+        $('#dial-devices-div').show();
       }
     }
 
@@ -93,10 +93,10 @@ function addMeeting(event){
             updateSummary(`Using MeetingId - ${MEETING_ID}`);
             //$(`#leave_${event.meeting.id}`).css('visibility', 'visible');
             $(`#reset-div`).show();
-            if(VIEW == "instantconnect"){
-              $('#dial-devices-div').show();
-            } else if(VIEW == "telehealth"){
+            if(VIEW == "telehealth"){
               $('#dial-telehealth-div').show();
+            } else {
+              $('#dial-devices-div').show();
             }
           })
         )
