@@ -65,7 +65,11 @@ function addMeeting(event){
     console.log(event);
     let name = event.meeting.meetingInfo.meetingName;
     if(!name){
-      name = event.meeting.partner.person.name;
+      name = name = event.meeting.meetingInfo.topic;
+      if(!name){
+        name = event.meeting.partner.person.name;
+      }
+      
     }
     buttonControl = "";
     if(IC_CONVERSATION_ID){
